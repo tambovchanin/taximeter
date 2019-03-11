@@ -1,7 +1,8 @@
 const cheerio = require('cheerio');
-const request = require('request');
-const { bases, token, day, night } = require('../config');
+const { bases, day, night, timeout } = require('../config');
 const {
+  uploadData,
+  parseGpsTable,
   getUploadPeriod,
   parseTransfersTable,
   parseVehiclesTable,
@@ -10,16 +11,17 @@ const {
 
 const period = getUploadPeriod({ day, night });
 
-console.log('* period', period);
-
 // Время ожидания загрузки страницы
-const TIMEOUT = 10000;
+const TIMEOUT = timeout;
 
 // Случайный офсет для имитация перемещения мыши к элементу (не больше десяти)
 const offset = () => Math.ceil(Math.random()*10);
 
 // Случайная задержка перед/после действия (от 0.5с до 2с)
 const delay = () => Math.ceil(Math.random()*1500)+500;
+
+// Список (массив) водителей в смене, заполняется при выгрузке платежей
+let drivers = [];
 
 const sctipt = {
   'Yandex login' : yaLogin
@@ -53,11 +55,11 @@ function processCity(idx, base) {
     browser
       .url('https://lk.taximeter.yandex.ru/login', pageComplete())
       .pause(delay(), safeMove(`button[type="submit"]:nth-child(${idx})`))
-      .pause(delay(), safeClick(`button[type="submit"]:nth-child(${idx})`))
+      .pause(100, safeClick(`button[type="submit"]:nth-child(${idx})`))
       .pause(delay(), processTransfers(browser, base))
       .pause(delay(), processVehicles(browser, base))
       .pause(delay(), processDrivers(browser, base))
-      // .pause(delay(), processDispatcher(browser, base))
+      .pause(delay(), processDispatcher(browser, base))
       .pause(delay(), quitDB(browser))
   }
 }
@@ -114,11 +116,21 @@ function processTransfers(browser, base) {
       .pause(delay())
       .setValue('input#filter-datetime-end', `${period.to}`)
 
+      // Список водителей в смене
+      .source((result) => {
+        let index = {};
+
+        let data = parseTransfersTable(cheerio.load(result.value));
+        browser.assert.ok(data.length > 0, `Водителей в смене ${data.length}`);
+
+        drivers = data.map(row => row.id);
+      })
+
       // Выгрузка таблицы "Наличные"
-      .pause(delay(), downloadAndTransfer('select#payment option[value="0"]', base, 'Наличные'))
+      .pause(delay(), downloadAndTransfer('select#payment option[value="0"]', base, 'Cash'))
 
       // Выгрузка таблицы "Безналичные"
-      .pause(delay(), downloadAndTransfer('select#payment option[value="1"]', base, 'Безналичне'))
+      .pause(delay(), downloadAndTransfer('select#payment option[value="1"]', base, 'Card'))
 
       return browser;
   }
@@ -136,7 +148,9 @@ function processVehicles(browser, base) {
         browser.assert.ok(data.length > 0);
       })
       .perform((client, callback) => {
-        uploadData(data, `${period.date}-vehicles-${base}`, (answer) => {
+        let { from, to, ...params } = { ...period, base, type: 'vehicles' };
+
+        uploadData(data, params, (answer) => {
           client.assert.ok(data.length > 0, `Получено строк ТС ${data.length}`);
           client.assert.ok(answer.status === 'success', 'Data transfered')
 
@@ -160,7 +174,9 @@ function processDrivers(browser, base) {
         browser.assert.ok(data.length > 0);
       })
       .perform((client, callback) => {
-        uploadData(data, `${period.date}-drivers-${base}`, (answer) => {
+        let { from, to, ...params } = { ...period, base, type: 'drivers' }
+
+        uploadData(data, params, (answer) => {
           client.assert.ok(data.length > 0, `Получено строк водителей ${data.length}`);
           client.assert.ok(answer.status === 'success', 'Data transfered')
 
@@ -174,11 +190,44 @@ function processDrivers(browser, base) {
 
 function processDispatcher(browser, base) {
   return function() {
-    let data = {};
+    browser.assert.ok(drivers.length >= 0, `Водителей в смене ${drivers.length}`);
 
-    browser
-      .url('https://lk.taximeter.yandex.ru/dispatcher')
-      .waitForElementVisible('.container-left', TIMEOUT)
+    Promise.all(drivers.map(gpsRequest));
+
+    function gpsRequest(id) {
+      return new Promise((res, rej) => {
+        let data = [];
+
+        browser
+          .url(`https://lk.taximeter.yandex.ru/driver/${id}/gps`)
+          .pause(delay())
+          .clearValue('input#start')
+          .pause(delay())
+          .setValue('input#start', `${period.from}`)
+          .pause(delay())
+          .clearValue('input#end')
+          .pause(delay())
+          .setValue('input#end', `${period.to}`)
+          .pause(delay(), safeClick('#btn-update'))
+          .pause(delay(), pageComplete())
+          .source((result) => {
+            data = parseGpsTable(cheerio.load(result.value));
+          })
+          .perform((client, callback) => {
+            if (!data.length) return callback();
+
+            let { from, to, ...params } = { ...period, base, type: 'gps', driver: id }
+
+            uploadData(data, params, (answer) => {
+              client.assert.ok(data.length > 0, `Получено маршрутных точек ${data.length}`);
+              client.assert.ok(answer.status === 'success', 'Data transfered')
+
+              callback();
+            });
+          })
+          .pause(100, () => res(id));
+      })
+    }
   }
 }
 
@@ -186,13 +235,14 @@ function quitDB(browser) {
   return function() {
     // Выход из базы
     browser
+      .url(`https://lk.taximeter.yandex.ru/`)
       // .pause(delay(), safeClick('#showMainMenu'))
       .pause(delay(), safeClick('a.nav-icon-logout'))
       .pause(delay(), pageComplete())
   }
 }
 
-function downloadAndTransfer(selector, base, type) {
+function downloadAndTransfer(selector, base, money) {
   return function() {
     let data = {};
 
@@ -203,8 +253,10 @@ function downloadAndTransfer(selector, base, type) {
         data = parseTransfersTable(cheerio.load(result.value));
       })
       .perform((client, callback) => {
-        uploadData(data, `${period.date}-transfers-${base}`, (answer) => {
-          client.assert.ok(data.length > 0, `Получено строк плетежей (${type}) ${data.length}`);
+        let { from, to, ...params } = { ...period, base, type: 'transfers', money }
+
+        uploadData(data, params, (answer) => {
+          client.assert.ok(data.length > 0, `Получено строк плетежей (${money}) ${data.length}`);
           client.assert.ok(answer.status === 'success', 'Data transfered')
 
           callback();
@@ -213,18 +265,4 @@ function downloadAndTransfer(selector, base, type) {
 
     return this;
   }
-}
-
-function uploadData(data, type, callback) {
-  request({
-    url: `https://api.coasttaxi.ru/yandex/taximeter/post_json?type=${type}`,
-    json: true,
-    method: 'POST',
-    headers: {
-      Authorization: token,
-    },
-    body: data
-  }, (err, res, body) => {
-      callback(body);
-  });
 }
