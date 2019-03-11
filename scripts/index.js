@@ -138,20 +138,27 @@ function processTransfers(browser, base) {
 
 function processVehicles(browser, base) {
   return function() {
-    let data = {};
+    let data = {
+      rows: []
+    };
 
     browser
       .url('https://lk.taximeter.yandex.ru/dictionary/cars', pageComplete())
-      .waitForElementVisible('#table1[data-open="car"]', TIMEOUT)
-      .source((result) => {
-        data = parseVehiclesTable(cheerio.load(result.value));
-        browser.assert.ok(data.length > 0);
+      .perform((client, callback) => {
+        extractVehicles();
+
+        function extractVehicles() {
+          client
+            .waitForElementVisible('#table1[data-open="car"]', TIMEOUT)
+            .source(processPages(data, extractVehicles, parseVehiclesTable, callback));
+        }
       })
+
       .perform((client, callback) => {
         let { from, to, ...params } = { ...period, base, type: 'vehicles' };
 
-        uploadData(data, params, (answer) => {
-          client.assert.ok(data.length > 0, `Получено строк ТС ${data.length}`);
+        uploadData(data.rows, params, (answer) => {
+          client.assert.ok(data.rows.length > 0, `Получено строк ТС ${data.rows.length}`);
           client.assert.ok(answer.status === 'success', 'Data transfered')
 
           callback();
@@ -164,20 +171,26 @@ function processVehicles(browser, base) {
 
 function processDrivers(browser, base) {
   return function() {
-    let data = {};
+    let data = {
+      rows: []
+    };
 
     browser
       .url('https://lk.taximeter.yandex.ru/dictionary/drivers', pageComplete())
-      .waitForElementVisible('#table1[data-open="driver"]', TIMEOUT)
-      .source((result) => {
-        data = parseDriversTable(cheerio.load(result.value));
-        browser.assert.ok(data.length > 0);
+      .perform((client, callback) => {
+        extractDrivers();
+
+        function extractDrivers() {
+          client
+            .waitForElementVisible('#table1[data-open="driver"]', TIMEOUT)
+            .source(processPages(data, extractDrivers, parseDriversTable, callback));
+        }
       })
       .perform((client, callback) => {
         let { from, to, ...params } = { ...period, base, type: 'drivers' }
 
-        uploadData(data, params, (answer) => {
-          client.assert.ok(data.length > 0, `Получено строк водителей ${data.length}`);
+        uploadData(data.rows, params, (answer) => {
+          client.assert.ok(data.rows.length > 0, `Получено строк водителей ${data.rows.length}`);
           client.assert.ok(answer.status === 'success', 'Data transfered')
 
           callback();
@@ -264,5 +277,30 @@ function downloadAndTransfer(selector, base, money) {
       });
 
     return this;
+  }
+}
+
+function processPages(data, recursion, parser, callback) {
+  return function ({ value }) {
+    const client = this;
+    const $ = cheerio.load(value);
+
+    data.rows = [...data.rows, ...parser($)];
+    client.assert.ok(data.rows.length > 0, `Получено ${data.rows.length} записей`);
+
+    let nextPage = $('.pages .active').next();
+    const href = $('a', nextPage).attr('href');
+
+    if (href) {
+      client.assert.ok(true, 'Загрузка следующей страницы');
+
+      client
+        .pause(delay(), safeClick(`a[href="${href}"]`))
+        .pause(delay(), recursion);
+    }
+    else {
+      client.assert.ok(true, 'Обработаны все страницы');
+      return callback();
+    }
   }
 }
