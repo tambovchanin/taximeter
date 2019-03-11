@@ -1,0 +1,7 @@
+/node_modules
+/downloads
+/reports
+/tests_output
+.DS_Store
+config.js
+.eslintrc
