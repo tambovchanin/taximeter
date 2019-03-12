@@ -2,6 +2,13 @@ const chromedriver = require('chromedriver');
 const config = require('./config');
 
 const globals = {
+
+  abortOnAssertionFailure: false,
+
+  retryAssertionTimeout: 10000,
+
+  asyncHookTimeout: 60000,
+
   before: function(done) {
     chromedriver.start();
 
@@ -14,6 +21,5 @@ const globals = {
     done();
   }
 };
-
 
 module.exports = { ...globals, ...config };
