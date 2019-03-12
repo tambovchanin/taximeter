@@ -7,7 +7,7 @@ module.exports = {
   // Данные для выгрузки полученных данных на сервер
   api: {
     // URL для выгрузки данных на сервер через API
-    url: 'https://api.coasttaxi.ru/yandex/taximeter/post_json',
+    url: '',
     // Токен аутентификации для выгрузки данных через API
     token: '',
   }
