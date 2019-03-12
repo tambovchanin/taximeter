@@ -104,8 +104,7 @@ function safeClick(selector) {
 function processTransfers(browser, base) {
   return function() {
     browser
-      .pause(delay(), safeClick('a.nav-icon-print'))
-      .pause(delay(), safeClick('a.nav-icon-print[href="/report/driver/types"]'))
+      .url('https://lk.taximeter.yandex.ru/report/driver/types', pageComplete())
       .pause(delay(), safeClick('input#change-datetime'))
       .waitForElementVisible('input#filter-datetime-start', TIMEOUT)
       .clearValue('input#filter-datetime-start')
@@ -150,6 +149,7 @@ function processVehicles(browser, base) {
         function extractVehicles() {
           client
             .waitForElementVisible('#table1[data-open="car"]', TIMEOUT)
+            .pause(delay())
             .source(processPages(data, extractVehicles, parseVehiclesTable, callback));
         }
       })
@@ -183,6 +183,7 @@ function processDrivers(browser, base) {
         function extractDrivers() {
           client
             .waitForElementVisible('#table1[data-open="driver"]', TIMEOUT)
+            .pause(delay())
             .source(processPages(data, extractDrivers, parseDriversTable, callback));
         }
       })
@@ -212,12 +213,12 @@ function processDispatcher(browser, base) {
         let data = [];
 
         browser
-          .url(`https://lk.taximeter.yandex.ru/driver/${id}/gps`)
-          .pause(delay())
+          .url(`https://lk.taximeter.yandex.ru/driver/${id}/gps`, pageComplete())
+          .pause(delay(), safeMove('input#start'))
           .clearValue('input#start')
           .pause(delay())
           .setValue('input#start', `${period.from}`)
-          .pause(delay())
+          .pause(delay(), safeMove('input#end'))
           .clearValue('input#end')
           .pause(delay())
           .setValue('input#end', `${period.to}`)
@@ -250,7 +251,7 @@ function quitDB(browser) {
   return function() {
     // Выход из базы
     browser
-      .url(`https://lk.taximeter.yandex.ru/`)
+      .url(`https://lk.taximeter.yandex.ru/`, pageComplete())
       .pause(delay(), safeClick('a.nav-icon-logout'))
       .pause(delay(), pageComplete())
   }
