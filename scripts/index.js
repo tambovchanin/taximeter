@@ -207,7 +207,7 @@ function processDispatcher(browser, base) {
 
     Promise.all(drivers.map(gpsRequest));
 
-    function gpsRequest(id) {
+    function gpsRequest(id, idx) {
       return new Promise((res, rej) => {
         let data = [];
 
@@ -227,6 +227,8 @@ function processDispatcher(browser, base) {
             data = parseGpsTable(cheerio.load(result.value));
           })
           .perform((client, callback) => {
+            client.assert.ok(true, ` Обработано ${idx+1} из ${drivers.length}`);
+
             if (!data.length) return callback();
 
             let { from, to, ...params } = { ...period, base, type: 'gps', driver: id }
