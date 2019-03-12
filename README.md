@@ -7,6 +7,13 @@ $ git clone https://github.com/tambovchanin/taximeter.git taximeter
 $ cd taximeter
 $ npm install
 ```
+
+Для запуска скрипта необходимо установить [Nightwatch.js](http://nightwatchjs.org/)
+
+```sh
+$ npm install nightwatch
+```
+
 ### Конфигурация
 После установки необходимых библиотек необходимо заполнить файл конфигурации. Для этого достаточно скопировать файл *config.sample.js* в файл *config.js*
 В содержиммо файла конфигурации необходимо внести параметры аутентификации и исправить время смены. при необходимости
@@ -53,5 +60,3 @@ module.exports = {
 ```sh
 $ nightwatch -c nightwatch.config.js
 ```
-
-
