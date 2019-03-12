@@ -1,5 +1,5 @@
 const cheerio = require('cheerio');
-const { bases, day, night, timeout } = require('../config');
+const { bases, day, night, timeout, wait } = require('../config');
 const {
   uploadData,
   parseGpsTable,
@@ -17,8 +17,8 @@ const TIMEOUT = timeout;
 // Случайный офсет для имитация перемещения мыши к элементу (не больше десяти)
 const offset = () => Math.ceil(Math.random()*10);
 
-// Случайная задержка перед/после действия (от 0.5с до 2с)
-const delay = () => Math.ceil(Math.random()*1500)+500;
+// Случайная задержка перед/после действия
+const delay = () => Math.ceil(Math.random()*1500) + wait;
 
 // Список (массив) водителей в смене, заполняется при выгрузке платежей
 let drivers = [];
