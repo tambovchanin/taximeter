@@ -2,9 +2,6 @@ const chromedriver = require('chromedriver');
 const config = require('./config');
 
 const globals = {
-
-  abortOnAssertionFailure: false,
-
   retryAssertionTimeout: 10000,
 
   asyncHookTimeout: 60000,
