@@ -17,6 +17,9 @@ const config = {
       'desiredCapabilities': {
         'browserName': 'chrome',
         'chromeOptions': {
+          'prefs': {
+            'intl.accept_languages': 'ru-RU,ru'
+          },
           'args': [
             '--no-sandbox',
             '--headless'
