@@ -19,14 +19,8 @@ const config = {
         'chromeOptions': {
           'args': [
             '--no-sandbox',
-            '--headless',
-            '--disable-gpu'
-          ],
-          'prefs': {
-            'download': {
-              'default_directory': process.cwd() + '/downloads/'
-            }
-          }
+            '--headless'
+          ]
         },
         'acceptSslCerts': true
       }

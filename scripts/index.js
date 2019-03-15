@@ -1,5 +1,5 @@
 const cheerio = require('cheerio');
-const { bases, day, night, timeout, wait } = require('../config');
+const { bases, day, night, timeout, wait, screenshots } = require('../config');
 const {
   uploadData,
   parseGpsTable,
@@ -13,6 +13,9 @@ const period = getUploadPeriod({ day, night });
 
 // Время ожидания загрузки страницы
 const TIMEOUT = timeout;
+
+const WIDTH = 2000;
+const HEIGHT = 2000;
 
 // Случайный офсет для имитация перемещения мыши к элементу (не больше десяти)
 const offset = () => Math.ceil(Math.random()*10);
@@ -158,6 +161,10 @@ function processVehicles(browser, base) {
         let { from, to, ...params } = { ...period, base, type: 'vehicles' };
 
         uploadData(data.rows, params, (answer) => {
+          if (screenshots) {
+            client.resizeWindow(WIDTH, HEIGHT);
+            client.saveScreenshot(`./ps/${params.date}-${params.period}-${params.base}-${params.type}.png`)
+          }
           client.assert.ok(data.rows.length > 0, `Получено строк ТС ${data.rows.length}`);
           client.assert.ok(answer.status === 'success', 'Data transfered')
 
@@ -191,6 +198,10 @@ function processDrivers(browser, base) {
         let { from, to, ...params } = { ...period, base, type: 'drivers' }
 
         uploadData(data.rows, params, (answer) => {
+          if (screenshots) {
+            client.resizeWindow(WIDTH, HEIGHT);
+            client.saveScreenshot(`./ps/${params.date}-${params.period}-${params.base}-${params.type}.png`)
+          }
           client.assert.ok(data.rows.length > 0, `Получено строк водителей ${data.rows.length}`);
           client.assert.ok(answer.status === 'success', 'Data transfered')
 
@@ -235,6 +246,10 @@ function processDispatcher(browser, base) {
             let { from, to, ...params } = { ...period, base, type: 'gps', driver: id }
 
             uploadData(data, params, (answer) => {
+              if (screenshots) {
+                client.resizeWindow(WIDTH, HEIGHT);
+                client.saveScreenshot(`./ps/${params.date}-${params.period}-${params.base}-${params.type}-${params.driver}.png`)
+              }
               client.assert.ok(data.length > 0, `Получено маршрутных точек ${data.length}`);
               client.assert.ok(answer.status === 'success', 'Data transfered')
 
@@ -264,6 +279,7 @@ function downloadAndTransfer(selector, base, money) {
     safeClick(selector).call(this)
       .pause(delay(), safeClick('#btn-update'))
       .pause(delay(), pageComplete())
+
       .source((result) => {
         data = parseTransfersTable(cheerio.load(result.value));
       })
@@ -271,6 +287,10 @@ function downloadAndTransfer(selector, base, money) {
         let { from, to, ...params } = { ...period, base, type: 'transfers', money }
 
         uploadData(data, params, (answer) => {
+          if (screenshots) {
+            client.resizeWindow(WIDTH, HEIGHT);
+            client.saveScreenshot(`./ps/${params.date}-${params.period}-${params.base}-${params.type}-${params.money}.png`)
+          }
           client.assert.ok(data.length > 0, `Получено строк плетежей (${money}) ${data.length}`);
           client.assert.ok(answer.status === 'success', 'Data transfered')
 
