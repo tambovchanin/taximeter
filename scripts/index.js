@@ -163,7 +163,7 @@ function processVehicles(browser, base) {
         uploadData(data.rows, params, (answer) => {
           if (screenshots) {
             client.resizeWindow(WIDTH, HEIGHT);
-            client.saveScreenshot(`./ps/${params.date}-${params.period}-${params.base}-${params.type}.png`)
+            client.saveScreenshot(`./ps/${params.date}-${params.period}-${params.base}-${params.type}.png`);
           }
           client.assert.ok(data.rows.length > 0, `Получено строк ТС ${data.rows.length}`);
           client.assert.ok(answer.status === 'success', 'Data transfered')
@@ -200,7 +200,7 @@ function processDrivers(browser, base) {
         uploadData(data.rows, params, (answer) => {
           if (screenshots) {
             client.resizeWindow(WIDTH, HEIGHT);
-            client.saveScreenshot(`./ps/${params.date}-${params.period}-${params.base}-${params.type}.png`)
+            client.saveScreenshot(`./ps/${params.date}-${params.period}-${params.base}-${params.type}.png`);
           }
           client.assert.ok(data.rows.length > 0, `Получено строк водителей ${data.rows.length}`);
           client.assert.ok(answer.status === 'success', 'Data transfered')
@@ -248,7 +248,7 @@ function processDispatcher(browser, base) {
             uploadData(data, params, (answer) => {
               if (screenshots) {
                 client.resizeWindow(WIDTH, HEIGHT);
-                client.saveScreenshot(`./ps/${params.date}-${params.period}-${params.base}-${params.type}-${params.driver}.png`)
+                client.saveScreenshot(`./ps/${params.date}-${params.period}-${params.base}-${params.type}-${params.driver}.png`);
               }
               client.assert.ok(data.length > 0, `Получено маршрутных точек ${data.length}`);
               client.assert.ok(answer.status === 'success', 'Data transfered')
@@ -289,7 +289,7 @@ function downloadAndTransfer(selector, base, money) {
         uploadData(data, params, (answer) => {
           if (screenshots) {
             client.resizeWindow(WIDTH, HEIGHT);
-            client.saveScreenshot(`./ps/${params.date}-${params.period}-${params.base}-${params.type}-${params.money}.png`)
+            client.saveScreenshot(`./ps/${params.date}-${params.period}-${params.base}-${params.type}-${params.money}.png`);
           }
           client.assert.ok(data.length > 0, `Получено строк плетежей (${money}) ${data.length}`);
           client.assert.ok(answer.status === 'success', 'Data transfered')
