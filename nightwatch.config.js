@@ -22,7 +22,8 @@ const config = {
           },
           'args': [
             '--no-sandbox',
-            '--headless'
+            '--headless',
+            '--lang=ru'
           ]
         },
         'acceptSslCerts': true
