@@ -18,6 +18,9 @@ const config = {
         'on_failure': true,
         'on_error': true
       },
+      'request_timeout_options': {
+        'timeout': 100000
+      },
       'desiredCapabilities': {
         'browserName': 'chrome',
         'chromeOptions': {
