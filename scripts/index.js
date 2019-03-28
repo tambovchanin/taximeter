@@ -266,8 +266,7 @@ function quitDB(browser) {
   return function() {
     // Выход из базы
     browser
-      .url(`https://lk.taximeter.yandex.ru/`, pageComplete())
-      .pause(delay(), safeClick('a.nav-icon-logout'))
+      .url(`https://lk.taximeter.yandex.ru/login/exit`, pageComplete())
       .pause(delay(), pageComplete())
   }
 }
