@@ -30,6 +30,7 @@ const config = {
           'args': [
             '--no-sandbox',
             '--headless',
+            '--disable-dev-shm-usage',
             '--lang=ru'
           ]
         },

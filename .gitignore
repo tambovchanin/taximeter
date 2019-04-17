@@ -3,6 +3,7 @@
 /reports
 /tests_output
 /ps/*
+/errors
 .DS_Store
 config.js
 .eslintrc

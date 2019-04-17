@@ -14,9 +14,6 @@ const period = getUploadPeriod({ day, night });
 // Время ожидания загрузки страницы
 const TIMEOUT = timeout;
 
-const WIDTH = 2000;
-const HEIGHT = 2000;
-
 // Случайный офсет для имитация перемещения мыши к элементу (не больше десяти)
 const offset = () => Math.ceil(Math.random()*10);
 
@@ -162,7 +159,6 @@ function processVehicles(browser, base) {
 
         uploadData(data.rows, params, (answer) => {
           if (screenshots) {
-            client.resizeWindow(WIDTH, HEIGHT);
             client.saveScreenshot(`./ps/${params.date}-${params.period}-${params.base}-${params.type}.png`);
           }
           client.assert.ok(data.rows.length > 0, `Получено строк ТС ${data.rows.length}`);
@@ -199,7 +195,6 @@ function processDrivers(browser, base) {
 
         uploadData(data.rows, params, (answer) => {
           if (screenshots) {
-            client.resizeWindow(WIDTH, HEIGHT);
             client.saveScreenshot(`./ps/${params.date}-${params.period}-${params.base}-${params.type}.png`);
           }
           client.assert.ok(data.rows.length > 0, `Получено строк водителей ${data.rows.length}`);
@@ -247,7 +242,6 @@ function processDispatcher(browser, base) {
 
             uploadData(data, params, (answer) => {
               if (screenshots) {
-                client.resizeWindow(WIDTH, HEIGHT);
                 client.saveScreenshot(`./ps/${params.date}-${params.period}-${params.base}-${params.type}-${params.driver}.png`);
               }
               client.assert.ok(data.length > 0, `Получено маршрутных точек ${data.length}`);
@@ -287,7 +281,6 @@ function downloadAndTransfer(selector, base, money) {
 
         uploadData(data, params, (answer) => {
           if (screenshots) {
-            client.resizeWindow(WIDTH, HEIGHT);
             client.saveScreenshot(`./ps/${params.date}-${params.period}-${params.base}-${params.type}-${params.money}.png`);
           }
           client.assert.ok(data.length > 0, `Получено строк плетежей (${money}) ${data.length}`);

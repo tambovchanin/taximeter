@@ -12,6 +12,10 @@ const globals = {
     done();
   },
 
+  beforeEach: function(browser, done) {
+    browser.resizeWindow(2304, 1728, done);
+  },
+
   after: function(done) {
     chromedriver.stop();
 
