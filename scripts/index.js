@@ -279,8 +279,6 @@ function downloadAndTransfer(selector, base, money) {
       .perform((client, callback) => {
         let { from, to, ...params } = { ...period, base, type: 'transfers', money }
 
-        console.log('* data', data);
-
         uploadData(data, params, (answer) => {
           if (screenshots) {
             client.saveScreenshot(`./ps/${params.date}-${params.period}-${params.base}-${params.type}-${params.money}.png`);
