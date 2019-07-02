@@ -57,7 +57,7 @@ function processCity(idx, base) {
       .pause(delay(), safeMove(`button[type="submit"]:nth-child(${idx})`))
       .pause(100, safeClick(`button[type="submit"]:nth-child(${idx})`))
       .pause(delay(), processTransfers(browser, base))
-      .pause(delay(), processVehicles(browser, base))
+      // .pause(delay(), processVehicles(browser, base))
       .pause(delay(), processDrivers(browser, base))
       .pause(delay(), processDispatcher(browser, base))
       .pause(delay(), quitDB(browser))
@@ -105,7 +105,7 @@ function processTransfers(browser, base) {
   return function() {
     browser
       .url('https://lk.taximeter.yandex.ru/report/driver/types', pageComplete())
-      .pause(delay(), safeClick('input#change-datetime'))
+      // .pause(delay(), safeClick('input#change-datetime'))
       .waitForElementVisible('input#filter-datetime-start', TIMEOUT)
       .clearValue('input#filter-datetime-start')
       .pause(delay())
