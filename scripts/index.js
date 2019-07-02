@@ -22,6 +22,7 @@ const delay = () => Math.ceil(Math.random()*1500) + wait;
 
 // Список (массив) водителей в смене, заполняется при выгрузке платежей
 let drivers = [];
+let createdAtClicked = false;
 
 const sctipt = {
   'Yandex login' : yaLogin
@@ -149,8 +150,15 @@ function processVehicles(browser, base) {
         function extractVehicles() {
           client
             .waitForElementVisible('.card__table', TIMEOUT)
+            .pause(delay(), () => {
+              if (!createdAtClicked)
+                client
+                  .pause(delay(), safeMove('.card__column'))
+                  .pause(delay(), safeClick('li[role="menuitem"]:last-child'))
+
+              createdAtClicked = true;
+            })
             .pause(5000)
-            .pause(delay())
             .source(processVuePages(data, extractVehicles, parseVehiclesTable, callback));
         }
       })
