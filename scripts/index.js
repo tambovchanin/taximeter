@@ -57,7 +57,7 @@ function processCity(idx, base) {
       .pause(delay(), safeMove(`button[type="submit"]:nth-child(${idx})`))
       .pause(100, safeClick(`button[type="submit"]:nth-child(${idx})`))
       .pause(delay(), processTransfers(browser, base))
-      // .pause(delay(), processVehicles(browser, base))
+      .pause(delay(), processVehicles(browser, base))
       .pause(delay(), processDrivers(browser, base))
       .pause(delay(), processDispatcher(browser, base))
       .pause(delay(), quitDB(browser))
@@ -142,15 +142,16 @@ function processVehicles(browser, base) {
     };
 
     browser
-      .url('https://lk.taximeter.yandex.ru/dictionary/cars', pageComplete())
+      .url('https://fleet.taxi.yandex.ru/vehicles', pageComplete())
       .perform((client, callback) => {
         extractVehicles();
 
         function extractVehicles() {
           client
-            .waitForElementVisible('#table1[data-open="car"]', TIMEOUT)
+            .waitForElementVisible('.card__table', TIMEOUT)
+            .pause(5000)
             .pause(delay())
-            .source(processPages(data, extractVehicles, parseVehiclesTable, callback));
+            .source(processVuePages(data, extractVehicles, parseVehiclesTable, callback));
         }
       })
 
@@ -291,6 +292,38 @@ function downloadAndTransfer(selector, base, money) {
       });
 
     return this;
+  }
+}
+
+
+
+function processVuePages(data, recursion, parser, callback) {
+  return function ({ value }) {
+    const client = this;
+    const $ = cheerio.load(value);
+
+    data.rows = [...data.rows, ...parser($)];
+    client.assert.ok(data.rows.length > 0, `Получено ${data.rows.length} записей`);
+
+    const nextPage = $('.ant-pagination-item-active').next();
+    const pageNumber = $(nextPage).text();
+    const selector = '.' + $(nextPage)
+      .attr('class')
+      .split(' ')
+      .join('.');
+
+    if (selector && pageNumber) {
+      client.assert.ok(true, `Загрузка следующей [${pageNumber}] страницы`);
+
+      client
+        .pause(delay(), safeClick(selector))
+        .pause(5000)
+        .pause(delay(), recursion);
+    }
+    else {
+      client.assert.ok(true, 'Обработаны все страницы');
+      return callback();
+    }
   }
 }
 
