@@ -194,9 +194,10 @@ function processDrivers(browser, base) {
 
         function extractDrivers() {
           client
-            .waitForElementVisible('#table1[data-open="driver"]', TIMEOUT)
+            .waitForElementVisible('.card__table', TIMEOUT)
+            .pause(4000)
             .pause(delay())
-            .source(processPages(data, extractDrivers, parseDriversTable, callback));
+            .source(processVuePages(data, extractDrivers, parseDriversTable, callback));
         }
       })
       .perform((client, callback) => {
