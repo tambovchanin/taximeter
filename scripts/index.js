@@ -1,4 +1,5 @@
 const cheerio = require('cheerio');
+const argv = require('minimist')(process.argv.slice(2));
 const { bases, day, night, timeout, wait, screenshots } = require('../config');
 const {
   uploadData,
@@ -9,7 +10,7 @@ const {
   parseDriversTable
 } = require('../lib');
 
-const period = getUploadPeriod({ day, night });
+const period = getUploadPeriod({ day, night }, argv.d, argv.p);
 
 // Время ожидания загрузки страницы
 const TIMEOUT = timeout;

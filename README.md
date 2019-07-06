@@ -71,5 +71,8 @@ module.exports = {
 ### Запуск
 
 ```sh
-$ nightwatch -c nightwatch.config.js
+$ nightwatch -c nightwatch.config.js [-d dd.mm.yyyy -p day|night]
+
+-d указать дату для выгрузки
+-p период выгрузки день (day) или ночь (night)
 ```
