@@ -71,8 +71,10 @@ module.exports = {
 ### Запуск
 
 ```sh
-$ nightwatch -c nightwatch.config.js [-d dd.mm.yyyy -p day|night]
+$ nightwatch -c nightwatch.config.js [--date dd.mm.yyyy --period day|night --from 10:00 --to 15:00]
 
--d указать дату для выгрузки
--p период выгрузки день (day) или ночь (night)
+--date 07.07.2019 - указать дату для выгрузки
+--period day - период выгрузки день (day) или ночь (night)
+--from 10:00 - указать начало периода
+--to 15:00 - указать окончание периода
 ```

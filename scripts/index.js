@@ -10,7 +10,7 @@ const {
   parseDriversTable
 } = require('../lib');
 
-const period = getUploadPeriod({ day, night }, argv.d, argv.p);
+const period = getUploadPeriod({ day, night }, argv);
 
 // Время ожидания загрузки страницы
 const TIMEOUT = timeout;
