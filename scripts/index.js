@@ -21,6 +21,14 @@ const offset = () => Math.ceil(Math.random()*10);
 // Случайная задержка перед/после действия
 const delay = () => Math.ceil(Math.random()*1500) + wait;
 
+if (!(argv.transfers || argv.vehicles || argv.drivers || argv.gps)) argv.all = true;
+
+console.log('Постановка в очередь задач:')
+if (argv.all || argv.transfers) console.log('\t- выгрузка платежей');
+if (argv.all || argv.vehicles) console.log('\t- выгрузка автотранспорта');
+if (argv.all || argv.drivers) console.log('\t- выгрузка водителей');
+if (argv.all || argv.gps) console.log('\t- выгрузка GPS');
+
 // Список (массив) водителей в смене, заполняется при выгрузке платежей
 let drivers = [];
 let createdAtClicked = false;
@@ -105,9 +113,10 @@ function safeClick(selector) {
 
 function processTransfers(browser, base) {
   return function() {
+    if (!(argv.transfers || argv.gps || argv.all)) return browser;
+
     browser
       .url('https://lk.taximeter.yandex.ru/report/driver/types', pageComplete())
-      // .pause(delay(), safeClick('input#change-datetime'))
       .waitForElementVisible('input#filter-datetime-start', TIMEOUT)
       .clearValue('input#filter-datetime-start')
       .pause(delay())
@@ -139,6 +148,8 @@ function processTransfers(browser, base) {
 
 function processVehicles(browser, base) {
   return function() {
+    if (!(argv.vehicles || argv.all)) return browser;
+
     let data = {
       rows: []
     };
@@ -184,6 +195,8 @@ function processVehicles(browser, base) {
 
 function processDrivers(browser, base) {
   return function() {
+    if (!(argv.drivers || argv.all)) return browser;
+
     let data = {
       rows: []
     };
@@ -221,6 +234,8 @@ function processDrivers(browser, base) {
 
 function processDispatcher(browser, base) {
   return function() {
+    if (!(argv.gps || argv.all)) return browser;
+
     browser.assert.ok(drivers.length >= 0, `Водителей в смене ${drivers.length}`);
 
     Promise.all(drivers.map(gpsRequest));
