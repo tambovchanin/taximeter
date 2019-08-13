@@ -4,7 +4,7 @@ const config = require('./config');
 const globals = {
   retryAssertionTimeout: 10000,
 
-  asyncHookTimeout: 60000,
+  asyncHookTimeout: 120000,
 
   before: function(done) {
     chromedriver.start();
