@@ -50,7 +50,7 @@ function yaLogin(browser) {
     .url('https://passport.yandex.ru', pageComplete())
     .pause(delay(), safeMove('input[name="login"'))
     .setValue('input[name="login"]', [browser.globals.login])
-    .pause(delay())
+    .pause(delay(), takeScreen('login', 'login'))
     .keys(browser.Keys.ENTER, safeMove('input[name="passwd"'))
     .pause(delay())
     .setValue('input[name="passwd"]', [browser.globals.password])
@@ -64,6 +64,7 @@ function processCity(idx, base) {
   return function(browser) {
     browser
       .url('https://lk.taximeter.yandex.ru/login', pageComplete())
+      .pause(100, takeScreen('city', base))
       .pause(delay(), safeMove(`button[type="submit"]:nth-child(${idx})`))
       .pause(100, safeClick(`button[type="submit"]:nth-child(${idx})`))
       .pause(delay(), processTransfers(browser, base))
@@ -87,6 +88,18 @@ function pageComplete(callback) {
         this.pause(500, pageComplete);
       }
     });
+  }
+}
+
+function takeScreen(type, base) {
+  let { from, to, ...params } = { ...period, base, type };
+
+  return function() {
+    if (screenshots) {
+      this.saveScreenshot(`./ps/${params.date}-${params.period}-${params.base}-${params.type}.png`);
+    }
+
+    return this;
   }
 }
 
@@ -118,6 +131,7 @@ function processTransfers(browser, base) {
     browser
       .url('https://lk.taximeter.yandex.ru/report/driver/types', pageComplete())
       .waitForElementVisible('input#filter-datetime-start', TIMEOUT)
+      .pause(100, takeScreen('transfers', base))
       .clearValue('input#filter-datetime-start')
       .pause(delay())
       .setValue('input#filter-datetime-start', `${period.from}`)
@@ -157,21 +171,24 @@ function processVehicles(browser, base) {
     browser
       .url('https://fleet.taxi.yandex.ru/vehicles', pageComplete())
       .perform((client, callback) => {
-        extractVehicles();
+        extractVehicles(1)();
 
-        function extractVehicles() {
-          client
-            .waitForElementVisible('.card__table', TIMEOUT)
-            .pause(delay(), () => {
-              if (!createdAtClicked)
-                client
-                  .pause(delay(), safeMove('.card__column'))
-                  .pause(delay(), safeClick('li[role="menuitem"]:last-child'))
+        function extractVehicles(page) {
+          return function() {
+            client
+              .waitForElementVisible('.card__table', TIMEOUT)
+              .pause(delay(), () => {
+                if (!createdAtClicked)
+                  client
+                    .pause(delay(), safeMove('.card__column'))
+                    .pause(delay(), safeClick('li[role="menuitem"]:last-child'))
 
-              createdAtClicked = true;
-            })
-            .pause(5000)
-            .source(processVuePages(data, extractVehicles, parseVehiclesTable, callback));
+                createdAtClicked = true;
+              })
+              .pause(5000)
+              .pause(delay(), takeScreen(`vehicles-${page}`, base))
+              .source(processVuePages(data, extractVehicles, parseVehiclesTable, callback));
+          }
         }
       })
 
@@ -179,9 +196,6 @@ function processVehicles(browser, base) {
         let { from, to, ...params } = { ...period, base, type: 'vehicles' };
 
         uploadData(data.rows, params, (answer) => {
-          if (screenshots) {
-            client.saveScreenshot(`./ps/${params.date}-${params.period}-${params.base}-${params.type}.png`);
-          }
           client.assert.ok(data.rows.length > 0, `Получено строк ТС ${data.rows.length}`);
           client.assert.ok(answer.status === 'success', 'Data transfered')
 
@@ -204,23 +218,22 @@ function processDrivers(browser, base) {
     browser
       .url('https://lk.taximeter.yandex.ru/dictionary/drivers', pageComplete())
       .perform((client, callback) => {
-        extractDrivers();
+        extractDrivers(1)();
 
-        function extractDrivers() {
-          client
-            .waitForElementVisible('.card__table', TIMEOUT)
-            .pause(4000)
-            .pause(delay())
-            .source(processVuePages(data, extractDrivers, parseDriversTable, callback));
+        function extractDrivers(page) {
+          return function() {
+            client
+              .waitForElementVisible('.card__table', TIMEOUT)
+              .pause(4000)
+              .pause(delay(), takeScreen(`drivers-${page}`, base))
+              .source(processVuePages(data, extractDrivers, parseDriversTable, callback));
+          }
         }
       })
       .perform((client, callback) => {
         let { from, to, ...params } = { ...period, base, type: 'drivers' }
 
         uploadData(data.rows, params, (answer) => {
-          if (screenshots) {
-            client.saveScreenshot(`./ps/${params.date}-${params.period}-${params.base}-${params.type}.png`);
-          }
           client.assert.ok(data.rows.length > 0, `Получено строк водителей ${data.rows.length}`);
           client.assert.ok(answer.status === 'success', 'Data transfered')
 
@@ -248,7 +261,7 @@ function processDispatcher(browser, base) {
           .url(`https://lk.taximeter.yandex.ru/driver/${id}/gps`, pageComplete())
           .pause(delay(), safeMove('input#start'))
           .clearValue('input#start')
-          .pause(delay())
+          .pause(delay(), takeScreen('dispatcher', base))
           .setValue('input#start', `${period.from}`)
           .pause(delay(), safeMove('input#end'))
           .clearValue('input#end')
@@ -343,32 +356,7 @@ function processVuePages(data, recursion, parser, callback) {
       client
         .pause(delay(), safeClick(selector))
         .pause(5000)
-        .pause(delay(), recursion);
-    }
-    else {
-      client.assert.ok(true, 'Обработаны все страницы');
-      return callback();
-    }
-  }
-}
-
-function processPages(data, recursion, parser, callback) {
-  return function ({ value }) {
-    const client = this;
-    const $ = cheerio.load(value);
-
-    data.rows = [...data.rows, ...parser($)];
-    client.assert.ok(data.rows.length > 0, `Получено ${data.rows.length} записей`);
-
-    let nextPage = $('.pages .active').next();
-    const href = $('a', nextPage).attr('href');
-
-    if (href) {
-      client.assert.ok(true, 'Загрузка следующей страницы');
-
-      client
-        .pause(delay(), safeClick(`a[href="${href}"]`))
-        .pause(delay(), recursion);
+        .pause(delay(), recursion(pageNumber));
     }
     else {
       client.assert.ok(true, 'Обработаны все страницы');
