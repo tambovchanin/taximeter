@@ -5,9 +5,10 @@ const {
   uploadData,
   parseGpsTable,
   getUploadPeriod,
-  parseTransfersTable,
+  parseOrdersTable,
+  parseDriversTable,
   parseVehiclesTable,
-  parseDriversTable
+  parseTransfersTable
 } = require('../lib');
 
 const period = getUploadPeriod({ day, night }, argv);
@@ -21,9 +22,10 @@ const offset = () => Math.ceil(Math.random()*10);
 // Случайная задержка перед/после действия
 const delay = () => Math.ceil(Math.random()*1500) + wait;
 
-if (!(argv.transfers || argv.vehicles || argv.drivers || argv.gps)) argv.all = true;
+if (!(argv.transfers || argv.vehicles || argv.drivers || argv.gps || argv.orders)) argv.all = true;
 
 console.log('Постановка в очередь задач:')
+if (argv.all || argv.orders) console.log('\t- выгрузка заказов');
 if (argv.all || argv.transfers) console.log('\t- выгрузка платежей');
 if (argv.all || argv.vehicles) console.log('\t- выгрузка автотранспорта');
 if (argv.all || argv.drivers) console.log('\t- выгрузка водителей');
@@ -67,6 +69,7 @@ function processCity(idx, base) {
       .pause(100, takeScreen('city', base))
       .pause(delay(), safeMove(`button[type="submit"]:nth-child(${idx})`))
       .pause(100, safeClick(`button[type="submit"]:nth-child(${idx})`))
+      .pause(delay(), processDriverOrders(browser, base))
       .pause(delay(), processTransfers(browser, base))
       .pause(delay(), processVehicles(browser, base))
       .pause(delay(), processDrivers(browser, base))
@@ -121,6 +124,46 @@ function safeClick(selector) {
       .click(selector);
 
     return this;
+  }
+}
+
+function processDriverOrders(browser, base) {
+  return function() {
+    if (!(argv.orders || argv.all)) return browser;
+
+    let data;
+
+    browser
+      .url('https://lk.taximeter.yandex.ru/report/driver', pageComplete())
+      .waitForElementVisible('input#filter-datetime-start', TIMEOUT)
+      .pause(100, takeScreen('transfers', base))
+      .clearValue('input#filter-datetime-start')
+      .pause(delay())
+      .setValue('input#filter-datetime-start', `${period.from}`)
+      .pause(delay())
+      .clearValue('input#filter-datetime-end')
+      .pause(delay())
+      .setValue('input#filter-datetime-end', `${period.to}`)
+
+      // Список водителей в смене
+      .source((result) => {
+        let index = {};
+
+        data = parseOrdersTable(cheerio.load(result.value));
+        browser.assert.ok(data.length > 0, `Водителей в смене ${data.length}`);
+      })
+
+      .perform((client, callback) => {
+        let { from, to, ...params } = { ...period, base, type: 'orders' };
+
+        uploadData(data, params, (answer) => {
+          client.assert.ok(answer.status === 'success', 'Data transfered')
+
+          callback();
+        });
+      })
+
+      return browser;
   }
 }
 
