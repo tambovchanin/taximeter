@@ -144,7 +144,8 @@ function processDriverOrders(browser, base) {
       .clearValue('input#filter-datetime-end')
       .pause(delay())
       .setValue('input#filter-datetime-end', `${period.to}`)
-
+      .pause(delay(), safeClick('#btn-update'))
+      .pause(delay(3000))
       // Список водителей в смене
       .source((result) => {
         let index = {};
