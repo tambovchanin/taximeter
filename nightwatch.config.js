@@ -2,8 +2,8 @@ const config = {
   'src_folders': ['scripts'],
   'globals_path': 'global.js',
 
-  'selenium' : {
-    'start_process' : false
+  'selenium': {
+    'start_process': false
   },
 
   'test_settings': {
@@ -12,9 +12,9 @@ const config = {
       'selenium_port': 9515,
       'default_path_prefix': '',
       'silent': true,
-      'screenshots' : {
+      'screenshots': {
         'enabled': true,
-        'path' : 'errors/',
+        'path': 'errors/',
         'on_failure': true,
         'on_error': true
       },
@@ -38,6 +38,6 @@ const config = {
       }
     }
   }
-}
+};
 
 module.exports = config;

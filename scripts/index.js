@@ -17,10 +17,10 @@ const period = getUploadPeriod({ day, night }, argv);
 const TIMEOUT = timeout;
 
 // Случайный офсет для имитация перемещения мыши к элементу (не больше десяти)
-const offset = () => Math.ceil(Math.random()*10);
+const offset = () => Math.ceil(Math.random() * 10);
 
 // Случайная задержка перед/после действия
-const delay = () => Math.ceil(Math.random()*1500) + wait;
+const delay = () => Math.ceil(Math.random() * 1500) + wait;
 
 if (!(argv.transfers || argv.vehicles || argv.drivers || argv.gps || argv.orders)) argv.all = true;
 
@@ -36,11 +36,11 @@ let drivers = [];
 let createdAtClicked = false;
 
 const sctipt = {
-  'Yandex login' : yaLogin
+  'Yandex login': yaLogin
 };
 
 bases.forEach((base, idx) => {
-  sctipt[`Processing ${base}`] = processCity(idx+1, base);
+  sctipt[`Processing ${base}`] = processCity(idx + 1, base);
 });
 
 sctipt['Close session'] = closeSession;
@@ -111,7 +111,7 @@ function safeMove(selector) {
     this
       .waitForElementVisible(selector, TIMEOUT)
       .pause(delay())
-      .moveToElement(selector, offset(), offset());
+    // .moveToElement(selector, offset(), offset());
 
     return this;
   }
@@ -144,6 +144,7 @@ function processDriverOrders(browser, base) {
       .clearValue('input#filter-datetime-end')
       .pause(delay())
       .setValue('input#filter-datetime-end', `${period.to}`)
+      .pause(300, safeClick('select#filter-status option[value="0"]'))
       .pause(delay(), safeClick('#btn-update'))
       .pause(delay(3000))
       // Список водителей в смене
@@ -164,7 +165,7 @@ function processDriverOrders(browser, base) {
         });
       })
 
-      return browser;
+    return browser;
   }
 }
 
@@ -200,7 +201,7 @@ function processTransfers(browser, base) {
       // Выгрузка таблицы "Безналичные"
       .pause(delay(), downloadAndTransfer('select#payment option[value="1"]', base, 'Card'))
 
-      return browser;
+    return browser;
   }
 }
 
@@ -317,7 +318,7 @@ function processDispatcher(browser, base) {
             data = parseGpsTable(cheerio.load(result.value));
           })
           .perform((client, callback) => {
-            client.assert.ok(true, ` Обработано ${idx+1} из ${drivers.length}`);
+            client.assert.ok(true, ` Обработано ${idx + 1} из ${drivers.length}`);
 
             if (!data.length) return callback();
 
@@ -380,7 +381,7 @@ function downloadAndTransfer(selector, base, money) {
 
 
 function processVuePages(data, recursion, parser, callback) {
-  return function ({ value }) {
+  return function({ value }) {
     const client = this;
     const $ = cheerio.load(value);
 
