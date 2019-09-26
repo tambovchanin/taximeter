@@ -144,27 +144,8 @@ function processDriverOrders(browser, base) {
       .clearValue('input#filter-datetime-end')
       .pause(delay())
       .setValue('input#filter-datetime-end', `${period.to}`)
-      .pause(300, safeClick('select#filter-status option[value="0"]'))
-      .pause(delay(), safeClick('#btn-update'))
-      .pause(delay(3000))
-      // Список водителей в смене
-      .source((result) => {
-        let index = {};
-
-        data = parseOrdersTable(cheerio.load(result.value));
-        browser.assert.ok(data.length > 0, `Водителей в смене ${data.length}`);
-      })
-
-      .perform((client, callback) => {
-        let { from, to, ...params } = { ...period, base, type: 'orders' };
-
-        uploadData(data, params, (answer) => {
-          client.assert.ok(answer.status === 'success', 'Data transfered')
-
-          callback();
-        });
-      })
-
+      .pause(delay(), downloadAndTransferOrders('select#filter-status option[value="5"]', base, 'Completed'))
+      .pause(delay(), downloadAndTransferOrders('select#filter-status option[value="6"]', base, 'Cancelled'))
     return browser;
   }
 }
@@ -346,6 +327,31 @@ function quitDB(browser) {
     browser
       .url(`https://lk.taximeter.yandex.ru/login/exit`, pageComplete())
       .pause(delay(), pageComplete())
+  }
+}
+
+function downloadAndTransferOrders(selector, base, type) {
+  return function() {
+    let data = {};
+
+    safeClick(selector).call(this)
+      .pause(delay(), safeClick('#btn-update'))
+      .pause(delay(3000))
+      .source((result) => {
+        data = parseOrdersTable(cheerio.load(result.value));
+      })
+
+      .perform((client, callback) => {
+        let { from, to, ...params } = { ...period, base, type: 'orders', type };
+
+        uploadData(data, params, (answer) => {
+          client.assert.ok(answer.status === 'success', 'Data transfered')
+
+          callback();
+        });
+      })
+
+    return this;
   }
 }
 
