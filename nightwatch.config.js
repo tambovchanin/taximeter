@@ -29,7 +29,7 @@ const config = {
           },
           'args': [
             '--no-sandbox',
-            // '--headless',
+            '--headless',
             '--disable-dev-shm-usage',
             '--lang=ru'
           ]
