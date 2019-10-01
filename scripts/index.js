@@ -48,6 +48,7 @@ sctipt['Close session'] = closeSession;
 module.exports = sctipt;
 
 function yaLogin(browser) {
+  console.log('\n- Логин');
   browser
     .url('https://passport.yandex.ru', pageComplete())
     .pause(delay(), safeMove('input[name="login"'))
@@ -64,6 +65,8 @@ function yaLogin(browser) {
 
 function processCity(idx, base) {
   return function(browser) {
+    console.log(`- Парсинг ${base}`);
+
     browser
       .url('https://lk.taximeter.yandex.ru/login', pageComplete())
       .pause(100, takeScreen('city', base))
@@ -111,7 +114,7 @@ function safeMove(selector) {
     this
       .waitForElementVisible(selector, TIMEOUT)
       .pause(delay())
-    // .moveToElement(selector, offset(), offset());
+      .moveToElement(selector, offset(), offset());
 
     return this;
   }
@@ -131,7 +134,7 @@ function processDriverOrders(browser, base) {
   return function() {
     if (!(argv.orders || argv.all)) return browser;
 
-    let data;
+    console.log(`\n- Обработка заказов`);
 
     browser
       .url('https://lk.taximeter.yandex.ru/report/driver', pageComplete())
@@ -153,6 +156,8 @@ function processDriverOrders(browser, base) {
 function processTransfers(browser, base) {
   return function() {
     if (!(argv.transfers || argv.gps || argv.all)) return browser;
+
+    console.log(`\n- Обработка платажей`);
 
     browser
       .url('https://lk.taximeter.yandex.ru/report/driver/types', pageComplete())
@@ -189,6 +194,8 @@ function processTransfers(browser, base) {
 function processVehicles(browser, base) {
   return function() {
     if (!(argv.vehicles || argv.all)) return browser;
+
+    console.log(`\n- Обработка транспорта`);
 
     let data = {
       rows: []
@@ -237,6 +244,8 @@ function processDrivers(browser, base) {
   return function() {
     if (!(argv.drivers || argv.all)) return browser;
 
+    console.log(`\n- Обработка водителей`);
+
     let data = {
       rows: []
     };
@@ -274,6 +283,8 @@ function processDrivers(browser, base) {
 function processDispatcher(browser, base) {
   return function() {
     if (!(argv.gps || argv.all)) return browser;
+
+    console.log(`\n- Обработка маршрутов`);
 
     browser.assert.ok(drivers.length >= 0, `Водителей в смене ${drivers.length}`);
 
