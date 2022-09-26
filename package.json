@@ -11,7 +11,7 @@
   "dependencies": {
     "cheerio": "^1.0.0-rc.2",
     "moment": "^2.24.0",
-    "nightwatch": "^1.0.19",
+    "nightwatch": "^1.7.13",
     "request": "^2.88.0"
   },
   "devDependencies": {
